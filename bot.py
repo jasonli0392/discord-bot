@@ -3,6 +3,7 @@ import discord
 import random
 from dotenv import load_dotenv
 from discord.ext import commands
+from youtube_search import YoutubeSearch
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -44,13 +45,13 @@ async def on_error(event, *args, **kwargs):
 
 @bot.command(name='join')
 async def join(ctx):
-	author = ctx.message.author
-	voice_channel = author.voice.channel
+	channel = ctx.message.author.voice.channel
 	await channel.connect()
 
 @bot.command(name='leave')
 async def leave(ctx):
-	await ctx.voice_client.disconnect()
+	server = ctx.message.guild.voice_client
+	await server.disconnect()
 
 @bot.command(name='roll', help='rng simulator')
 async def roll(ctx, number_of_rolls: int, min_num: int, max_num: int):
@@ -107,7 +108,7 @@ async def blackjack(ctx):
 			elif hand_count < dealer_count:
 				await ctx.send(f'You got {hand_count}. Dealer has {dealer_count}. You lose.')
 			elif hand_count == dealer_count:
-				await ctx.send(f'You got {hand_count}. Dealer has {dealer}. Push.')
+				await ctx.send(f'You got {hand_count}. Dealer has {dealer_count}. Push.')
 			hand_count = 21
 		elif msg.content == "fold":
 			await ctx.send("Good luck next time!")
@@ -115,5 +116,15 @@ async def blackjack(ctx):
 
 	if hand_count > 21:
 		await ctx.send("Bust.")
+
+@bot.command(name='youtube', help='searches and returns first link from youtube')
+async def youtube(ctx,*,search_term):
+	results = YoutubeSearch(search_term, max_results=1).to_dict()
+
+	results_dict = results[0]
+
+	url = "https://www.youtube.com" + results_dict["link"]
+
+	await ctx.send(url)
 
 bot.run(token)
